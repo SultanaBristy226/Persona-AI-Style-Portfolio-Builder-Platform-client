@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-main: #0B0218;
+  --bg-secondary: #140326;
+  --deep-purple: #210044;
+  --primary-purple: #6D28D9;
+  --bright-violet: #8B5CF6;
+  --neon-violet: #A855F7;
+  --lavender-glow: #C084FC;
+  --soft-lavender: #DDD6FE;
+  --text-main: #FAF7FF;
+  --text-secondary: #C4B5D8;
+  --border-glow: rgba(216, 180, 254, 0.25);
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: 'Poppins', 'Inter', sans-serif;
+}
+
+.btn-primary {
+  @apply px-6 py-3 rounded-xl font-medium text-white transition-transform hover:scale-105;
+  background: linear-gradient(135deg, var(--primary-purple), var(--neon-violet));
+  box-shadow: 0 0 25px rgba(168, 85, 247, 0.35);
+}
+
+.btn-secondary {
+  @apply px-6 py-3 rounded-xl font-medium transition-colors;
+  color: var(--text-main);
+  border: 1px solid var(--border-glow);
+}
+
+.card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-glow);
+  @apply rounded-2xl p-6;
+}
+
+.input-field {
+  @apply w-full rounded-lg px-4 py-2 bg-transparent outline-none;
+  color: var(--text-main);
+  border: 1px solid var(--border-glow);
+}
+.input-field:focus {
+  border-color: var(--neon-violet);
+}
