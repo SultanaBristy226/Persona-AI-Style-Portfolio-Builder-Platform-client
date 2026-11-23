@@ -1,126 +1,177 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import toast from 'react-hot-toast'
-import Navbar from '../components/layout/Navbar.jsx'
-import PersonalInfoForm from '../components/forms/PersonalInfoForm.jsx'
-import SkillsForm from '../components/forms/SkillsForm.jsx'
-import ProjectsForm from '../components/forms/ProjectsForm.jsx'
-import EducationForm from '../components/forms/EducationForm.jsx'
-import ExperienceForm from '../components/forms/ExperienceForm.jsx'
-import CertificatesForm from '../components/forms/CertificatesForm.jsx'
-import SocialLinksForm from '../components/forms/SocialLinksForm.jsx'
-import CustomizePanel from '../components/preview/CustomizePanel.jsx'
-import LivePreview from '../components/preview/LivePreview.jsx'
-import DeviceToggle from '../components/preview/DeviceToggle.jsx'
-import { usePortfolio } from '../context/PortfolioContext.jsx'
-import api from '../api/axios.js'
+import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  User, Wrench, FolderKanban, GraduationCap,
+  Briefcase, Award, Link2, Check, Save, Eye, Monitor, Tablet, Smartphone,
+} from "lucide-react";
+import toast from "react-hot-toast";
+import { usePortfolio } from "../context/PortfolioContext";
+import PersonalInfoForm from "../components/forms/PersonalInfoForm";
+import SkillsForm from "../components/forms/SkillsForm";
+import ProjectsForm from "../components/forms/ProjectsForm";
+import EducationForm from "../components/forms/EducationForm";
+import ExperienceForm from "../components/forms/ExperienceForm";
+import CertificatesForm from "../components/forms/CertificatesForm";
+import SocialLinksForm from "../components/forms/SocialLinksForm";
+import LivePreview from "../components/preview/LivePreview";
+import DeviceToggle from "../components/preview/DeviceToggle";
 
 const STEPS = [
-  { key: 'personal', label: 'Personal', Component: PersonalInfoForm },
-  { key: 'skills', label: 'Skills', Component: SkillsForm },
-  { key: 'projects', label: 'Projects', Component: ProjectsForm },
-  { key: 'education', label: 'Education', Component: EducationForm },
-  { key: 'experience', label: 'Experience', Component: ExperienceForm },
-  { key: 'certificates', label: 'Certificates', Component: CertificatesForm },
-  { key: 'social', label: 'Social', Component: SocialLinksForm },
-  { key: 'design', label: 'Design', Component: CustomizePanel },
-]
+  { id: "personal", label: "Personal", icon: User },
+  { id: "skills", label: "Skills", icon: Wrench },
+  { id: "projects", label: "Projects", icon: FolderKanban },
+  { id: "education", label: "Education", icon: GraduationCap },
+  { id: "experience", label: "Experience", icon: Briefcase },
+  { id: "certificates", label: "Certificates", icon: Award },
+  { id: "social", label: "Social", icon: Link2 },
+];
+
+const FORM_MAP = {
+  personal: PersonalInfoForm,
+  skills: SkillsForm,
+  projects: ProjectsForm,
+  education: EducationForm,
+  experience: ExperienceForm,
+  certificates: CertificatesForm,
+  social: SocialLinksForm,
+};
 
 export default function EditorPage() {
-  const { portfolio, setPortfolio } = usePortfolio()
-  const navigate = useNavigate()
-  const [stepIndex, setStepIndex] = useState(0)
-  const [device, setDevice] = useState('desktop')
-  const [mobileTab, setMobileTab] = useState('edit')
-  const [publishing, setPublishing] = useState(false)
+  const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
+  const initial = params.get("section") || "personal";
+  const [active, setActive] = useState(initial);
+  const [device, setDevice] = useState("desktop");
+  const [mobileTab, setMobileTab] = useState("edit"); // edit | preview
+  const { portfolio, updatePortfolio, fetchPortfolio } = usePortfolio();
 
-  const { Component } = STEPS[stepIndex]
-  const goNext = () => setStepIndex((i) => Math.min(i + 1, STEPS.length - 1))
+  useEffect(() => {
+    setParams({ section: active }, { replace: true });
+  }, [active]);
 
-  const savePortfolio = async () => {
+  const isCompleted = (id) => {
+    if (!portfolio) return false;
+    switch (id) {
+      case "personal": return !!portfolio.personalInfo?.fullName;
+      case "skills": return portfolio.skills?.length > 0;
+      case "projects": return portfolio.projects?.length > 0;
+      case "education": return portfolio.education?.length > 0;
+      case "experience": return portfolio.experience?.length > 0;
+      case "certificates": return portfolio.certificates?.length > 0;
+      case "social": return Object.values(portfolio.socialLinks || {}).some(Boolean);
+      default: return false;
+    }
+  };
+
+  const handleSave = async (patch) => {
     try {
-      await api.put('/portfolio', portfolio)
-      toast.success('Portfolio saved')
+      await updatePortfolio(patch);
+      toast.success("Saved ✨");
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Save failed')
+      toast.error(err.response?.data?.message || "Save failed");
     }
-  }
+  };
 
-  const publish = async () => {
-    if (!portfolio.personal.fullName || !portfolio.personal.title) {
-      return toast.error('Name and professional title are required to publish')
-    }
-    setPublishing(true)
-    try {
-      const { data } = await api.post('/portfolio/publish', portfolio)
-      setPortfolio((prev) => ({ ...prev, published: true, username: data.username }))
-      toast.success('Portfolio published!')
-      navigate('/dashboard')
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Publish failed')
-    } finally {
-      setPublishing(false)
-    }
-  }
+  const FormComponent = FORM_MAP[active];
 
   return (
-    <div>
-      <Navbar />
-
-      {/* Mobile tab switcher */}
-      <div className="flex gap-2 px-6 pt-4 md:hidden">
-        {['edit', 'preview'].map((tab) => (
+    <div className="min-h-screen pt-16">
+      {/* Mobile tab bar (bottom sticky) */}
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 backdrop-blur border-t flex" style={{ background: "var(--bg-sec)", borderColor: "var(--border)" }}>
+        {["edit", "preview"].map((t) => (
           <button
-            key={tab}
-            onClick={() => setMobileTab(tab)}
-            className="flex-1 rounded-lg px-4 py-2 text-sm capitalize"
-            style={{
-              border: '1px solid var(--border-glow)',
-              backgroundColor: mobileTab === tab ? 'var(--primary-purple)' : 'transparent',
-            }}
+            key={t}
+            onClick={() => setMobileTab(t)}
+            className="flex-1 py-3 text-sm font-medium capitalize"
+            style={{ color: mobileTab === t ? "var(--neon)" : "var(--text-sec)" }}
           >
-            {tab}
+            {t}
           </button>
         ))}
       </div>
 
-      <div className="grid gap-6 p-6 md:grid-cols-2">
-        {/* Editor side */}
-        <div className={mobileTab === 'edit' ? 'block' : 'hidden md:block'}>
-          <div className="mb-4 flex flex-wrap gap-2">
-            {STEPS.map((s, i) => (
+      <div className="md:grid md:grid-cols-[220px_1fr] lg:grid-cols-[220px_1fr_1fr] gap-4 px-4 py-6">
+        {/* Vertical stepper */}
+        <aside className={`${mobileTab === "edit" ? "block" : "hidden"} md:block`}>
+          <div className="card p-3 sticky top-20">
+            <ul className="space-y-1">
+              {STEPS.map((s, i) => {
+                const Icon = s.icon;
+                const isActive = active === s.id;
+                const done = isCompleted(s.id);
+                return (
+                  <li key={s.id}>
+                    <button
+                      onClick={() => setActive(s.id)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition"
+                      style={{
+                        background: isActive ? "var(--bg-deep)" : "transparent",
+                        color: isActive ? "var(--text)" : "var(--text-sec)",
+                      }}
+                    >
+                      <span
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold shrink-0"
+                        style={{
+                          background: done ? "var(--neon)" : isActive ? "var(--primary)" : "var(--bg)",
+                          color: done || isActive ? "#fff" : "var(--text-sec)",
+                        }}
+                      >
+                        {done ? <Check className="w-3.5 h-3.5" /> : i + 1}
+                      </span>
+                      <Icon className="w-4 h-4" />
+                      <span className="truncate">{s.label}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </aside>
+
+        {/* Form side */}
+        <section className={`${mobileTab === "edit" ? "block" : "hidden"} md:block`}>
+          <div className="card p-5 md:sticky md:top-20">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold capitalize">{active}</h2>
               <button
-                key={s.key}
-                onClick={() => setStepIndex(i)}
-                className="rounded-lg px-3 py-1 text-xs"
-                style={{
-                  border: '1px solid var(--border-glow)',
-                  backgroundColor: stepIndex === i ? 'var(--primary-purple)' : 'transparent',
-                }}
+                onClick={() => navigate("/dashboard")}
+                className="text-xs px-3 py-1.5 rounded-lg border"
+                style={{ borderColor: "var(--border)" }}
               >
-                {s.label}
+                Dashboard
               </button>
-            ))}
-          </div>
+            </div>
 
-          <Component onNext={goNext} />
-
-          <div className="mt-6 flex gap-3">
-            <button onClick={savePortfolio} className="btn-secondary">Save Draft</button>
-            <button onClick={publish} disabled={publishing} className="btn-primary">
-              {publishing ? 'Publishing...' : 'Publish Portfolio'}
-            </button>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={active}
+                initial={{ opacity: 0, x: 15 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -15 }}
+                transition={{ duration: 0.25 }}
+              >
+                {FormComponent && (
+                  <FormComponent
+                    data={portfolio?.[active === "social" ? "socialLinks" : active]}
+                    onSave={handleSave}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
-        </div>
+        </section>
 
-        {/* Preview side */}
-        <div className={mobileTab === 'preview' ? 'block' : 'hidden md:block'}>
-          <div className="mb-4 flex justify-end">
-            <DeviceToggle device={device} setDevice={setDevice} />
+        {/* Live preview */}
+        <section className={`${mobileTab === "preview" ? "block" : "hidden"} lg:block`}>
+          <div className="sticky top-20">
+            <div className="flex justify-center mb-3">
+              <DeviceToggle device={device} setDevice={setDevice} />
+            </div>
+            <LivePreview portfolio={portfolio} device={device} />
           </div>
-          <LivePreview portfolio={portfolio} device={device} />
-        </div>
+        </section>
       </div>
     </div>
-  )
+  );
 }
