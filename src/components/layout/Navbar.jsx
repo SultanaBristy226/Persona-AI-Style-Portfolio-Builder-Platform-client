@@ -1,37 +1,52 @@
-import { Link } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext.jsx'
+import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
+import { Sparkles, Sun, Moon } from "lucide-react";
 
-export default function Navbar() {
-  const { user, logout } = useAuth()
+const Navbar = () => {
+  const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border-glow bg-bg-main/80 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link to="/" className="text-xl font-bold">
-          Persona
+    <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur-xl bg-[var(--bg)]/70 border-b border-[var(--border)]">
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2 font-display font-bold text-xl">
+          <Sparkles className="w-5 h-5 text-[var(--neon)]" />
+          <span className="gradient-text">Persona</span>
         </Link>
-        <nav className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {/* Theme toggle */}
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className="w-9 h-9 rounded-lg border border-[var(--border)] hover:bg-[var(--bg-sec)] transition flex items-center justify-center"
+          >
+            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+
           {user ? (
             <>
-              <Link to="/dashboard" className="text-sm text-text-secondary hover:text-text-main">
+              <Link to="/dashboard" className="text-sm text-[var(--text-sec)] hover:text-[var(--text)] transition hidden sm:block">
                 Dashboard
               </Link>
-              <button onClick={logout} className="btn-secondary text-sm">
-                Log Out
+              <button onClick={logout} className="text-sm px-4 py-2 rounded-lg border border-[var(--border)] hover:bg-[var(--bg-sec)] transition">
+                Logout
               </button>
             </>
           ) : (
             <>
-              <Link to="/login" className="text-sm text-text-secondary hover:text-text-main">
-                Log In
+              <Link to="/login" className="text-sm text-[var(--text-sec)] hover:text-[var(--text)] transition hidden sm:block">
+                Login
               </Link>
-              <Link to="/register" className="btn-primary text-sm">
-                Create Your Portfolio
+              <Link to="/register" className="text-sm px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--primary)] to-[var(--neon)] text-white font-medium hover:shadow-[0_0_20px_rgba(168,85,247,0.35)] transition">
+                Get Started
               </Link>
             </>
           )}
-        </nav>
+        </div>
       </div>
-    </header>
-  )
-}
+    </nav>
+  );
+};
+
+export default Navbar;

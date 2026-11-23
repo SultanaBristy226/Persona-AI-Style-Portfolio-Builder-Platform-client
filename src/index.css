@@ -3,48 +3,80 @@
 @tailwind utilities;
 
 :root {
-  --bg-main: #0B0218;
-  --bg-secondary: #140326;
-  --deep-purple: #210044;
-  --primary-purple: #6D28D9;
-  --bright-violet: #8B5CF6;
-  --neon-violet: #A855F7;
-  --lavender-glow: #C084FC;
-  --soft-lavender: #DDD6FE;
-  --text-main: #FAF7FF;
-  --text-secondary: #C4B5D8;
-  --border-glow: rgba(216, 180, 254, 0.25);
+  /* DARK (default) */
+  --bg: #0b0218;
+  --bg-sec: #140326;
+  --bg-deep: #210044;
+  --primary: #6d28d9;
+  --violet: #8b5cf6;
+  --neon: #a855f7;
+  --lavender: #c084fc;
+  --soft-lav: #ddd6fe;
+  --text: #faf7ff;
+  --text-sec: #c4b5d8;
+  --border: rgba(216, 180, 254, 0.25);
+  --glow: rgba(168, 85, 247, 0.35);
 }
 
-body {
-  background-color: var(--bg-main);
-  color: var(--text-main);
-  font-family: 'Poppins', 'Inter', sans-serif;
+html.light {
+  /* LIGHT */
+  --bg: #faf7ff;
+  --bg-sec: #f3ecff;
+  --bg-deep: #ede3ff;
+  --primary: #6d28d9;
+  --violet: #7c3aed;
+  --neon: #9333ea;
+  --lavender: #a855f7;
+  --soft-lav: #6d28d9;
+  --text: #1a0b2e;
+  --text-sec: #5a4a70;
+  --border: rgba(109, 40, 217, 0.2);
+  --glow: rgba(147, 51, 234, 0.25);
 }
 
-.btn-primary {
-  @apply px-6 py-3 rounded-xl font-medium text-white transition-transform hover:scale-105;
-  background: linear-gradient(135deg, var(--primary-purple), var(--neon-violet));
-  box-shadow: 0 0 25px rgba(168, 85, 247, 0.35);
+* { border-color: var(--border); }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
-.btn-secondary {
-  @apply px-6 py-3 rounded-xl font-medium transition-colors;
-  color: var(--text-main);
-  border: 1px solid var(--border-glow);
+body { min-height: 100vh; overflow-x: hidden; }
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--neon), var(--lavender), var(--soft-lav));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .card {
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-glow);
-  @apply rounded-2xl p-6;
+  background: var(--bg-sec);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
 }
 
-.input-field {
-  @apply w-full rounded-lg px-4 py-2 bg-transparent outline-none;
-  color: var(--text-main);
-  border: 1px solid var(--border-glow);
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--neon), 0 0 20px rgba(168, 85, 247, 0.3);
 }
-.input-field:focus {
-  border-color: var(--neon-violet);
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-sec); }
+::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: var(--neon); }
+
+.dot-pattern {
+  background-image: radial-gradient(var(--border) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.grid-pattern {
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
